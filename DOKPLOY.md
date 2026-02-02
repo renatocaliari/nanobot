@@ -44,10 +44,13 @@ nano .env
 
 **Variáveis obrigatórias:**
 - `NANOBOT_PROVIDERS__ZAI__API_KEY`: Sua chave da Z.AI (https://open.bigmodel.cn/usercenter/apikeys)
+  - `NANOBOT_PROVIDERS__ZAI__API_BASE`: Endpoint da API Z.AI
+    - Para **Z.AI Coding Plan** (recomendado): `https://api.z.ai/api/coding/paas/v4/`
+    - Para **Zhipu AI padrão**: `https://open.bigmodel.cn/api/paas/v4/`
   - OU `NANOBOT_PROVIDERS__OPENROUTER__API_KEY`: Sua chave da OpenRouter (https://openrouter.ai/keys)
 
 **Variáveis opcionais:**
-- `NANOBOT_DEFAULT_MODEL`: Modelo a usar (padrão: zai/glm-4.7)
+- `NANOBOT_AGENTS__DEFAULTS__MODEL`: Modelo a usar (padrão: zai/glm-4.7)
 - `NANOBOT_CHANNELS__TELEGRAM__TOKEN`: Token do bot Telegram (@BotFather)
 - `NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM`: IDs de usuários permitidos (ex: ["123456789"])
 - `NANOBOT_CHANNELS__WHATSAPP__ENABLED`: true/false para WhatsApp
