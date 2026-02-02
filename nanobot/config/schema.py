@@ -1,7 +1,8 @@
 """Configuration schema using Pydantic."""
 
 from pathlib import Path
-from pydantic import BaseModel, Field
+from typing import Any
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -12,6 +13,38 @@ class WhatsAppConfig(BaseModel):
     bridge_url: str = "ws://localhost:3001"
     allow_from: list[str] = Field(default_factory=list)  # Allowed phone numbers
 
+    @field_validator("enabled", mode="before")
+    @classmethod
+    def parse_enabled(cls, v: Any) -> bool:
+        """Parse enabled from string (environment variables are always strings)."""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.lower() in ("true", "1", "yes", "on")
+        return bool(v)
+
+    @field_validator("allow_from", mode="before")
+    @classmethod
+    def parse_allow_from(cls, v: Any) -> list[str]:
+        """Parse allow_from from string or list."""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            if not v or v.strip() == "":
+                return []
+            # Try to parse as JSON list
+            import json
+
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+                return [v]
+            except json.JSONDecodeError:
+                # If not valid JSON, split by comma
+                return [item.strip() for item in v.split(",")]
+        return []
+
 
 class TelegramConfig(BaseModel):
     """Telegram channel configuration."""
@@ -19,6 +52,38 @@ class TelegramConfig(BaseModel):
     enabled: bool = False
     token: str = ""  # Bot token from @BotFather
     allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs or usernames
+
+    @field_validator("enabled", mode="before")
+    @classmethod
+    def parse_enabled(cls, v: Any) -> bool:
+        """Parse enabled from string (environment variables are always strings)."""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.lower() in ("true", "1", "yes", "on")
+        return bool(v)
+
+    @field_validator("allow_from", mode="before")
+    @classmethod
+    def parse_allow_from(cls, v: Any) -> list[str]:
+        """Parse allow_from from string or list."""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            if not v or v.strip() == "":
+                return []
+            # Try to parse as JSON list
+            import json
+
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+                return [v]
+            except json.JSONDecodeError:
+                # If not valid JSON, split by comma
+                return [item.strip() for item in v.split(",")]
+        return []
 
 
 class ChannelsConfig(BaseModel):
