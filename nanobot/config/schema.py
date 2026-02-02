@@ -95,7 +95,7 @@ class Config(BaseSettings):
     channels: ChannelsConfig = Field(default_factory=ChannelsConfig)
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     gateway: GatewayConfig = Field(default_factory=GatewayConfig)
-    tools: ToolsConfig = Field(default_factory=WebToolsConfig)
+    tools: ToolsConfig = Field(default_factory=ToolsConfig)
 
     @property
     def workspace_path(self) -> Path:
