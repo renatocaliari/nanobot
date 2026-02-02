@@ -52,9 +52,15 @@ nano .env
 **Variáveis opcionais:**
 - `NANOBOT_AGENTS__DEFAULTS__MODEL`: Modelo a usar (padrão: zai/glm-4.7)
 - `NANOBOT_CHANNELS__TELEGRAM__TOKEN`: Token do bot Telegram (@BotFather)
-- `NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM`: IDs de usuários permitidos (ex: ["123456789"])
+- `NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM`: IDs de usuários permitidos
+  - ⚠️ **IMPORTANTE**: Use formato JSON válido com aspas: `["123456789"]`
+  - ❌ Errado: `[123456789]` (sem aspas)
+  - ❌ Errado: `123456789` (sem colchetes)
+  - ✅ Correto: `["123456789"]` ou `["123456789", "987654321"]`
 - `NANOBOT_CHANNELS__WHATSAPP__ENABLED`: true/false para WhatsApp
 - `NANOBOT_PORT`: Porta do gateway (padrão: 18790)
+
+> **💡 Dica**: Para múltiplos usuários no Telegram, separe por vírgula dentro do array JSON: `["123456789", "987654321", "@usuario"]`
 
 ## 🐳 Passo 3: Deploy no Dokploy
 

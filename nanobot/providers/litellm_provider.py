@@ -26,19 +26,32 @@ class LiteLLMProvider(LLMProvider):
         super().__init__(api_key, api_base)
         self.default_model = default_model
 
+        # Detect provider type BEFORE setting api_base
+        # Check for Z.AI/Zhipu first (before OpenRouter check)
+        self.is_zai = (
+            "zai" in default_model.lower()
+            or "zhipu" in default_model.lower()
+            or "glm" in default_model.lower()
+            or (api_key and api_key.startswith("z-"))
+        )
+
         # Detect OpenRouter by api_key prefix or explicit api_base
         self.is_openrouter = (api_key and api_key.startswith("sk-or-")) or (
             api_base and "openrouter" in api_base
         )
 
         # Track if using custom endpoint (vLLM, etc.)
-        self.is_vllm = bool(api_base) and not self.is_openrouter
+        # Only treat as vLLM if it has api_base AND is NOT Z.AI or OpenRouter
+        self.is_vllm = bool(api_base) and not (self.is_zai or self.is_openrouter)
 
         # Configure LiteLLM based on provider
         if api_key:
             if self.is_openrouter:
                 # OpenRouter mode - set key
                 os.environ["OPENROUTER_API_KEY"] = api_key
+            elif self.is_zai:
+                # Z.AI/Zhipu mode - set ZAI_API_KEY
+                os.environ.setdefault("ZAI_API_KEY", api_key)
             elif self.is_vllm:
                 # vLLM/custom endpoint - uses OpenAI-compatible API
                 os.environ["OPENAI_API_KEY"] = api_key
@@ -48,10 +61,9 @@ class LiteLLMProvider(LLMProvider):
                 os.environ.setdefault("OPENAI_API_KEY", api_key)
             elif "gemini" in default_model.lower():
                 os.environ.setdefault("GEMINI_API_KEY", api_key)
-            elif "zhipu" in default_model or "glm" in default_model or "zai" in default_model:
-                os.environ.setdefault("ZAI_API_KEY", api_key)
 
-        if api_base:
+        if api_base and not self.is_zai:
+            # Only set api_base for non-Z.AI providers (Z.AI uses default)
             litellm.api_base = api_base
 
         # Disable LiteLLM logging noise
@@ -109,8 +121,9 @@ class LiteLLMProvider(LLMProvider):
             "temperature": temperature,
         }
 
-        # Pass api_base directly for custom endpoints (vLLM, etc.)
-        if self.api_base:
+        # Pass api_base directly for custom endpoints (vLLM, etc.) but NOT for Z.AI
+        # Z.AI uses its own predefined endpoint in LiteLLM
+        if self.api_base and not self.is_zai:
             kwargs["api_base"] = self.api_base
 
         if tools:
