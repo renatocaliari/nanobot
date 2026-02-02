@@ -34,12 +34,14 @@ nano .env
 ```
 
 **Variáveis obrigatórias:**
-- `OPENROUTER_API_KEY`: Sua chave da OpenRouter (https://openrouter.ai/keys)
+- `NANOBOT_PROVIDERS__ZAI__API_KEY`: Sua chave da Z.AI (https://open.bigmodel.cn/usercenter/apikeys)
+  - OU `NANOBOT_PROVIDERS__OPENROUTER__API_KEY`: Sua chave da OpenRouter (https://openrouter.ai/keys)
 
 **Variáveis opcionais:**
-- `TELEGRAM_BOT_TOKEN`: Para integração com Telegram
-- `TELEGRAM_ALLOWED_USERS`: IDs de usuários permitidos
-- `WHATSAPP_ENABLED`: true/false para WhatsApp
+- `NANOBOT_DEFAULT_MODEL`: Modelo a usar (padrão: zai/glm-4.7)
+- `NANOBOT_CHANNELS__TELEGRAM__TOKEN`: Token do bot Telegram (@BotFather)
+- `NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM`: IDs de usuários permitidos (ex: ["123456789"])
+- `NANOBOT_CHANNELS__WHATSAPP__ENABLED`: true/false para WhatsApp
 - `NANOBOT_PORT`: Porta do gateway (padrão: 18790)
 
 ## 🐳 Passo 3: Deploy no Dokploy
