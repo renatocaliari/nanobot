@@ -353,10 +353,21 @@ def channels_status():
     table = Table(title="Channel Status")
     table.add_column("Channel", style="cyan")
     table.add_column("Enabled", style="green")
-    table.add_column("Bridge URL", style="yellow")
+    table.add_column("Configuration", style="yellow")
 
+    # WhatsApp channel
     wa = config.channels.whatsapp
-    table.add_row("WhatsApp", "✓" if wa.enabled else "✗", wa.bridge_url)
+    wa_config = wa.bridge_url if wa.enabled else "not configured"
+    table.add_row("WhatsApp", "✓" if wa.enabled else "✗", wa_config)
+
+    # Telegram channel
+    tg = config.channels.telegram
+    if tg.enabled:
+        # Show first 10 chars of token
+        tg_config = f"token: {tg.token[:10]}..." if len(tg.token) > 10 else f"token: {tg.token}"
+    else:
+        tg_config = "not configured"
+    table.add_row("Telegram", "✓" if tg.enabled else "✗", tg_config)
 
     console.print(table)
 
@@ -609,10 +620,19 @@ def cron_run(
 def status():
     """Show nanobot status."""
     from nanobot.config.loader import load_config, get_config_path
-    from nanobot.utils.helpers import get_workspace_path
 
     config_path = get_config_path()
-    workspace = get_workspace_path()
+
+    # Load config to get correct workspace path
+    if config_path.exists():
+        config = load_config()
+        workspace = config.workspace_path
+    else:
+        # Fallback to default when no config file
+        from nanobot.utils.helpers import get_workspace_path
+
+        workspace = get_workspace_path()
+        config = None
 
     console.print(f"{__logo__} nanobot Status\n")
 
@@ -623,8 +643,7 @@ def status():
         f"Workspace: {workspace} {'[green]✓[/green]' if workspace.exists() else '[red]✗[/red]'}"
     )
 
-    if config_path.exists():
-        config = load_config()
+    if config:
         console.print(f"Model: {config.agents.defaults.model}")
 
         # Check API keys
@@ -632,6 +651,7 @@ def status():
         has_anthropic = bool(config.providers.anthropic.api_key)
         has_openai = bool(config.providers.openai.api_key)
         has_gemini = bool(config.providers.gemini.api_key)
+        has_zai = bool(config.providers.zai.api_key)
         has_vllm = bool(config.providers.vllm.api_base)
 
         console.print(
@@ -642,6 +662,7 @@ def status():
         )
         console.print(f"OpenAI API: {'[green]✓[/green]' if has_openai else '[dim]not set[/dim]'}")
         console.print(f"Gemini API: {'[green]✓[/green]' if has_gemini else '[dim]not set[/dim]'}")
+        console.print(f"Z.AI API: {'[green]✓[/green]' if has_zai else '[dim]not set[/dim]'}")
         vllm_status = (
             f"[green]✓ {config.providers.vllm.api_base}[/green]"
             if has_vllm
