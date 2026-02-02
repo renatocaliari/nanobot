@@ -1,6 +1,15 @@
 # Deploy Nanobot no Dokploy
 
+**📌 Este guia é para o fork [renatocaliari/nanobot](https://github.com/renatocaliari/nanobot).** Para o projeto original, veja [HKUDS/nanobot](https://github.com/HKUDS/nanobot).
+
 Este guia orienta você através do processo de deploy do **nanobot** usando **Docker Compose** no **Dokploy**.
+
+> **⭐ Novidades neste fork:**
+> - Suporte a **Z.AI** (GLM models a $0.11/M tokens)
+> - Docker otimizado para **Dokploy**
+> - Correções de segurança e bugs
+>
+> Veja [FORK_CHANGES.md](./FORK_CHANGES.md) para detalhes completos.
 
 ## 📋 Pré-requisitos
 
@@ -15,9 +24,9 @@ Antes de começar, certifique-se de ter:
 Se você ainda não tem o código com o Dockerfile:
 
 ```bash
-# Clone o fork com o suporte Docker
-git clone https://github.com/pve/nanobot-ai.git
-cd nanobot-ai
+# Clone o fork com suporte Docker e Z.AI
+git clone https://github.com/renatocaliari/nanobot.git
+cd nanobot
 
 # Faça checkout do branch com Dockerfile
 git checkout claude/add-dockerfile-uv-1i3Kt

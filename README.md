@@ -2,6 +2,7 @@
   <img src="nanobot_logo.png" alt="nanobot" width="500">
   <h1>nanobot: Ultra-Lightweight Personal AI Assistant</h1>
   <p>
+    <a href="https://github.com/HKUDS/nanobot"><img src="https://img.shields.io/badge/fork-of-HKUDS%2Fnanobot-blue" alt="Fork"></a>
     <a href="https://pypi.org/project/nanobot-ai/"><img src="https://img.shields.io/pypi/v/nanobot-ai" alt="PyPI"></a>
     <a href="https://pepy.tech/project/nanobot-ai"><img src="https://static.pepy.tech/badge/nanobot-ai" alt="Downloads"></a>
     <img src="https://img.shields.io/badge/python-≥3.11-blue" alt="Python">
@@ -11,12 +12,16 @@
   </p>
 </div>
 
+> **📌 This is a fork of [HKUDS/nanobot](https://github.com/HKUDS/nanobot) with additional features and improvements. See [FORK_CHANGES.md](./FORK_CHANGES.md) for details.**
+
 🐈 **nanobot** is an **ultra-lightweight** personal AI assistant inspired by [Clawdbot](https://github.com/openclaw/openclaw) 
 
 ⚡️ Delivers core agent functionality in just **~4,000** lines of code — **99% smaller** than Clawdbot's 430k+ lines.
 
 ## 📢 News
 
+- **2025-02-02** 🐳 Docker deployment support added! Deploy to Dokploy in minutes. See [DOKPLOY.md](./DOKPLOY.md)
+- **2025-02-02** ⭐ Z.AI provider support for cost-efficient GLM models ($0.11/M tokens)
 - **2025-02-01** 🎉 nanobot launched! Welcome to try 🐈 nanobot!
 
 ## Key Features of nanobot:
@@ -69,7 +74,13 @@ pip install nanobot-ai
 **Install from source** (recommended for development)
 
 ```bash
+# Upstream (original project)
 git clone https://github.com/HKUDS/nanobot.git
+cd nanobot
+pip install -e .
+
+# This fork (includes Z.AI, Dokploy, bug fixes)
+git clone https://github.com/renatocaliari/nanobot.git
 cd nanobot
 pip install -e .
 ```
@@ -86,8 +97,8 @@ uv pip install nanobot-ai
 
 > [!TIP]
 > Set your API key in `~/.nanobot/config.json`.
-> Get API keys: [OpenRouter](https://openrouter.ai/keys) (LLM) · [Brave Search](https://brave.com/search/api/) (optional, for web search)
-> You can also change the model to `minimax/minimax-m2` for lower cost.
+> Get API keys: [Z.AI](https://z.com) (GLM models, $0.11/M tokens) · [OpenRouter](https://openrouter.ai/keys) (LLM) · [Brave Search](https://brave.com/search/api/) (optional, for web search)
+> This fork includes Z.AI provider support for cost-efficient GLM model access. See [FORK_CHANGES.md](./FORK_CHANGES.md) for details.
 
 **1. Initialize**
 
@@ -97,6 +108,30 @@ nanobot onboard
 
 **2. Configure** (`~/.nanobot/config.json`)
 
+**Option A: Z.AI (Recommended - Cost Efficient)**
+```json
+{
+  "providers": {
+    "zai": {
+      "apiKey": "z-xxxxxxxxxxxxx"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "zai/glm-4.7"
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "apiKey": "BSA-xxx"
+      }
+    }
+  }
+}
+```
+
+**Option B: OpenRouter**
 ```json
 {
   "providers": {
@@ -109,8 +144,12 @@ nanobot onboard
       "model": "anthropic/claude-opus-4-5"
     }
   },
-  "webSearch": {
-    "apiKey": "BSA-xxx"
+  "tools": {
+    "web": {
+      "search": {
+        "apiKey": "BSA-xxx"
+      }
+    }
   }
 }
 ```
@@ -124,7 +163,29 @@ nanobot agent -m "What is 2+2?"
 
 That's it! You have a working AI assistant in 2 minutes.
 
-## 🐳 Docker
+## 🐳 Docker & Deployment
+
+### Docker Compose (Recommended)
+
+```bash
+# Clone this fork
+git clone https://github.com/renatocaliari/nanobot.git
+cd nanobot
+
+# Copy environment template
+cp .env.example .env
+
+# Edit .env and add your API keys
+nano .env
+
+# Start services
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f nanobot
+```
+
+### Docker
 
 ```bash
 docker build -t nanobot .
@@ -133,6 +194,19 @@ docker run -v ~/.nanobot:/root/.nanobot -p 18790:18790 nanobot
 ```
 
 Mount `~/.nanobot` so your config and workspace persist across runs. Edit `~/.nanobot/config.json` on the host to add API keys, then restart the container.
+
+### Dokploy Deployment
+
+This fork includes optimized Docker configuration for Dokploy deployment. See [DOKPLOY.md](./DOKPLOY.md) for complete guide.
+
+**Quick setup:**
+1. Set environment variables in Dokploy:
+   ```env
+   NANOBOT_PROVIDERS__ZAI__API_KEY=z-xxxxxxxxxxxxx
+   NANOBOT_DEFAULT_MODEL=zai/glm-4.7
+   ```
+2. Build and deploy using `docker-compose.yml`
+3. Access at `http://your-domain:18790`
 
 ## 🖥️ Local Models (vLLM)
 
@@ -258,12 +332,24 @@ nanobot gateway
 {
   "agents": {
     "defaults": {
-      "model": "anthropic/claude-opus-4-5"
+      "model": "zai/glm-4.7"
     }
   },
   "providers": {
+    "zai": {
+      "apiKey": "z-xxxxxxxxxxxxx"
+    },
     "openrouter": {
       "apiKey": "sk-or-v1-xxx"
+    },
+    "anthropic": {
+      "apiKey": "sk-ant-xxx"
+    },
+    "openai": {
+      "apiKey": "sk-xxx"
+    },
+    "gemini": {
+      "apiKey": "AIza..."
     }
   },
   "channels": {
@@ -285,6 +371,14 @@ nanobot gateway
   }
 }
 ```
+
+**Providers supported in this fork:**
+- `zai` - Z.AI / Zhipu AI (GLM models, $0.11/M tokens) ⭐
+- `openrouter` - OpenRouter (multi-provider)
+- `anthropic` - Anthropic (Claude models)
+- `openai` - OpenAI (GPT models)
+- `gemini` - Google Gemini ⭐
+- `vllm` - Local models via vLLM
 
 </details>
 
@@ -340,6 +434,20 @@ nanobot/
 ```
 
 ## 🤝 Contribute & Roadmap
+
+### Fork Differences
+
+This is a fork of [HKUDS/nanobot](https://github.com/HKUDS/nanobot) with additional features:
+
+- ⭐ **Z.AI Provider** - Cost-efficient GLM models ($0.11/M tokens)
+- 🐳 **Dokploy Deployment** - Production-ready Docker configuration
+- 🔒 **Security Fixes** - URL validation, redirect limits
+- ✨ **Tool Validation** - JSON-schema parameter validation
+- 🐛 **Bug Fixes** - Heartbeat, CLI display, error messages
+
+See [FORK_CHANGES.md](./FORK_CHANGES.md) for complete list of changes and migration guide.
+
+### Upstream Contribution
 
 PRs welcome! The codebase is intentionally small and readable. 🤗
 
