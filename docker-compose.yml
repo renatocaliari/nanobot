@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  nanobot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nanobot:latest
+    container_name: nanobot
+
+    # Persist config and workspace across container restarts
+    volumes:
+      - nanobot-config:/root/.nanobot
+
+    # Expose the gateway port
+    ports:
+      - "${NANOBOT_PORT:-18790}:18790"
+
+    # Environment variables for configuration
+    environment:
+      # You can inject API keys via environment variables
+      # The nanobot will use these if set in config.json
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY:-}
+
+      # Telegram configuration (optional)
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS:-}
+
+      # WhatsApp configuration (optional)
+      - WHATSAPP_ENABLED=${WHATSAPP_ENABLED:-false}
+      - WHATSAPP_ALLOWED_NUMBERS=${WHATSAPP_ALLOWED_NUMBERS:-}
+
+    # Default command - can be overridden in Dokploy
+    command: ["gateway"]
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "nanobot", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  nanobot-config:
+    driver: local
+    name: nanobot-config
