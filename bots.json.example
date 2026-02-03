@@ -1,0 +1,90 @@
+{
+  "bots": [
+    {
+      "id": "health-bot",
+      "name": "Dr. Bot Saúde",
+      "description": "Assistente especializado em saúde e bem-estar",
+      "channels": {
+        "telegram_enabled": true,
+        "telegram_token": "YOUR_BOT_TOKEN_1",
+        "telegram_allow_from": ["123456789"]
+      },
+      "workspace": "~/.nanobot/workspaces/health-bot",
+      "agent": {
+        "model": "zai/glm-4.7",
+        "temperature": 0.7
+      },
+      "mcps": ["supermemory", "exa-search"]
+    },
+    {
+      "id": "finance-bot",
+      "name": "Finance Bot",
+      "description": "Assistente especializado em finanças pessoais",
+      "channels": {
+        "telegram_enabled": true,
+        "telegram_token": "YOUR_BOT_TOKEN_2",
+        "telegram_allow_from": ["123456789"]
+      },
+      "workspace": "~/.nanobot/workspaces/finance-bot",
+      "agent": {
+        "model": "zai/glm-4.7-flash",
+        "temperature": 0.5
+      },
+      "mcps": ["exa-search"]
+    },
+    {
+      "id": "cooking-bot",
+      "name": "Chef Bot 🧑‍🍳",
+      "description": "Assistente especializado em culinária e receitas",
+      "channels": {
+        "telegram_enabled": true,
+        "telegram_token": "YOUR_BOT_TOKEN_3",
+        "telegram_allow_from": ["123456789"]
+      },
+      "workspace": "~/.nanobot/workspaces/cooking-bot",
+      "agent": {
+        "model": "zai/glm-4.7",
+        "temperature": 0.8
+      },
+      "mcps": ["exa-search", "supermemory"]
+    }
+  ],
+  "mcps": {
+    "mcps": [
+      {
+        "name": "supermemory",
+        "type": "http",
+        "description": "Persistent memory with semantic search",
+        "url": "http://localhost:3000",
+        "env": {
+          "SUPERMEMORY_API_KEY": "optional-key"
+        },
+        "health_check_enabled": true,
+        "health_check_endpoint": "/health",
+        "health_check_timeout": 5
+      },
+      {
+        "name": "exa-search",
+        "type": "command",
+        "description": "Web search via Exa AI",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-exa"],
+        "env": {
+          "EXA_API_KEY": "your-exa-api-key"
+        },
+        "health_check_enabled": true,
+        "health_check_timeout": 10
+      },
+      {
+        "name": "filesystem",
+        "type": "command",
+        "description": "File system operations",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/allowed/path"],
+        "env": {},
+        "health_check_enabled": true,
+        "health_check_timeout": 3
+      }
+    ]
+  }
+}
