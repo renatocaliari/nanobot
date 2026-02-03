@@ -90,8 +90,8 @@ class AgentLoop:
         from nanobot.agent.tools.memory_status import register_memory_status_tools
         from nanobot.agent.tools.mcp_status import register_mcp_status_tools
 
-        register_memory_status_tools(self.tools._registry)
-        register_mcp_status_tools(self.tools._registry)
+        register_memory_status_tools(self.tools._tools)
+        register_mcp_status_tools(self.tools._tools)
 
     async def run(self) -> None:
         """Run the agent loop, processing messages from the bus."""
