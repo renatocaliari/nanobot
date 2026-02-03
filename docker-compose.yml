@@ -5,9 +5,11 @@ services:
     image: mem0ai/mem0:latest
     container_name: nanobot-mem0
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - MEM0_API_KEY=${MEM0_API_KEY:-}
+    volumes:
+      - mem0-data:/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
@@ -103,3 +105,6 @@ volumes:
   nanobot-config:
     driver: local
     name: nanobot-config
+  mem0-data:
+    driver: local
+    name: nanobot-mem0-data
