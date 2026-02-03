@@ -6,6 +6,8 @@ services:
     container_name: nanobot-mem0
     ports:
       - "127.0.0.1:8000:8000"
+    networks:
+      - default
     environment:
       # Use Z.AI (compatible with OpenAI API)
       - OPENAI_API_KEY=${MEM0_OPENAI_API_KEY:-}
@@ -50,6 +52,9 @@ services:
     # Expose the gateway port
     ports:
       - "${NANOBOT_PORT:-18790}:18790"
+
+    networks:
+      - default
 
     # Environment variables for configuration
     environment:
@@ -113,3 +118,8 @@ volumes:
   mem0-data:
     driver: local
     name: nanobot-mem0-data
+
+networks:
+  default:
+    name: nanobot-network
+    driver: bridge
