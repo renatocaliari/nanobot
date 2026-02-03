@@ -250,6 +250,38 @@ tools: ToolsConfig = Field(default_factory=ToolsConfig)
 
 **Impact:** Configuration now correctly initializes all tool settings.
 
+### 6. Telegram Polling Conflict Error Handler (commit `7333bf8`)
+**File:** `nanobot/channels/telegram.py`
+
+**Problem:**
+```
+telegram.error.Conflict: Conflict: terminated by other getUpdates request;
+make sure that only one bot instance is running
+```
+
+This error appears repeatedly in logs during:
+- Overlapping deployments (old + new container)
+- Internal retry/reconnection logic
+- Webhook cleanup issues
+
+**Fix:**
+```python
+# Added error handler to catch and suppress Conflict errors
+from telegram.error import Conflict
+
+async def _error_handler(self, update, context):
+    """Handle errors from the Telegram bot."""
+    if isinstance(context.error, Conflict):
+        logger.warning("Telegram polling conflict detected (this is normal during overlapping deployments)")
+        return
+    logger.error(f"Telegram error: {context.error}")
+
+# Registered in start() method
+self._app.add_error_handler(self._error_handler)
+```
+
+**Impact:** Conflict errors now logged as warnings instead of errors, reducing log spam. Bot continues to function normally - only logging affected.
+
 ---
 
 ## 📋 Complete File Changes
@@ -261,6 +293,7 @@ tools: ToolsConfig = Field(default_factory=ToolsConfig)
 - `nanobot/heartbeat/service.py` - Fixed token comparison
 - `nanobot/agent/tools/web.py` - Added URL validation and redirect limits
 - `nanobot/agent/tools/base.py` - Added parameter validation
+- `nanobot/channels/telegram.py` - Added polling conflict error handler
 - `pyproject.toml` - Added jsonschema dependency
 
 ### New Files:
@@ -343,7 +376,7 @@ If you encounter conflicts during rebase, please open an issue.
 | Env Var Pattern | Mixed | Standardized |
 | Web Fetch Security | ⚠️ Limited | ✅ Enhanced |
 | CLI Display | ⚠️ Partial | ✅ Complete |
-| Bug Fixes | - | ✅ 5 fixes |
+| Bug Fixes | - | ✅ 6 fixes |
 
 ---
 
