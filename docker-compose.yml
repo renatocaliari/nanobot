@@ -1,11 +1,11 @@
 version: '3.8'
 
-services:
+ services:
   mem0:
     image: mem0/mem0-api-server:latest
     container_name: nanobot-mem0
     ports:
-      - "127.0.0.1:8000:8000"
+      - "0.0.0.0:8000:8000"
     networks:
       - default
     environment:
