@@ -10,6 +10,9 @@ services:
       # Use Z.AI (compatible with OpenAI API)
       - OPENAI_API_KEY=${MEM0_OPENAI_API_KEY:-}
       - OPENAI_API_BASE=${MEM0_OPENAI_API_BASE:-https://api.z.ai/api/coding/paas/v4/}
+      # Log environment variables for debugging
+      - OPENAI_API_KEY_SET=${MEM0_OPENAI_API_KEY:+true}
+      - OPENAI_API_BASE_SET=${MEM0_OPENAI_API_BASE:+true}
     volumes:
       - mem0-data:/data
     restart: unless-stopped
@@ -17,8 +20,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
     deploy:
       resources:
         limits:
@@ -74,7 +77,7 @@ services:
 
     depends_on:
       mem0:
-        condition: service_healthy
+        condition: service_started
 
     restart: unless-stopped
 
