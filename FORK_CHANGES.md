@@ -4,7 +4,72 @@ This fork of [HKUDS/nanobot](https://github.com/HKUDS/nanobot) includes addition
 
 ## 🆕 New Features
 
-### 1. Z.AI / Zhipu AI Provider Support ⭐
+### 1. Mem0 Integration 🧠 (Default Memory System)
+Self-hosted, multi-tenant memory system with persistent storage and semantic search.
+
+**Why it matters:**
+- **Self-hosted**: No external dependencies or API limits
+- **Multi-user isolation**: Each user has separate memory space
+- **Semantic search**: Find memories by meaning, not just keywords
+- **Open source**: MIT license (no vendor lock-in)
+- **Cost**: Free when self-hosted
+
+**Features:**
+- ✅ Persistent memory across sessions
+- ✅ Multi-tenant architecture (user_id-based isolation)
+- ✅ Semantic search with scoring
+- ✅ CRUD operations (Create, Read, Update, Delete)
+- ✅ Backward compatible with Supermemory API
+
+**Quick Start:**
+```bash
+# Mem0 is included by default in docker-compose.yml
+docker-compose up -d
+
+# Verify Mem0 is running
+curl http://localhost:8000/v1/health
+```
+
+**Environment Variables:**
+```bash
+MEM0_URL=http://mem0:8000          # Docker (internal)
+MEM0_URL=http://localhost:8000     # Manual (external)
+MEM0_API_KEY=                      # Optional
+```
+
+**API Usage:**
+```python
+from nanobot.memory import Mem0Client
+
+client = Mem0Client(server_url="http://localhost:8000")
+await client.store_memory(user_id="user123", content="User loves Python")
+memories = await client.search_memories(user_id="user123", query="Python")
+await client.close()
+```
+
+**Documentation:**
+- [README_MEM0.md](./README_MEM0.md) - User documentation and API reference
+- [TESTING_MEM0.md](./TESTING_MEM0.md) - Testing guide
+- [DEPLOYMENT_MEM0_STRATEGY.md](./DEPLOYMENT_MEM0_STRATEGY.md) - Deployment guide
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) - Migration from Supermemory
+
+**Implementation:**
+- `nanobot/memory/mem0_client.py` - Async HTTP client (277 lines)
+- `tests/test_mem0_integration.py` - Unit tests (266 lines, 6/6 passing)
+- `tests/test_mem0_live.py` - Integration tests (328 lines)
+- Backward compatibility aliases: `SupermemoryMCPClient = Mem0Client`
+
+**Files Added:**
+- `nanobot/memory/mem0_client.py` - Core Mem0 client implementation
+- `nanobot/memory/__init__.py` - Updated exports
+- `docker-compose.mem0.yml` - Full stack with PostgreSQL
+- `pytest.ini` - CI/CD configuration with test markers
+- `README_MEM0.md` - User documentation (320 lines)
+- `TESTING_MEM0.md` - Testing guide (313 lines)
+- `DEPLOYMENT_MEM0_STRATEGY.md` - Deployment strategy (212 lines)
+- `MIGRATION_GUIDE.md` - Migration guide
+
+### 2. Z.AI / Zhipu AI Provider Support ⭐
 Native integration with Z.AI (Zhipu AI) for cost-efficient GLM model access.
 
 **Why it matters:**
@@ -80,7 +145,122 @@ docker-compose up -d
 
 See [DOKPLOY.md](./DOKPLOY.md) for detailed instructions.
 
-### 3. Gemini Provider Support
+### 3. Multi-Bot System with Isolated Workspaces 🤖
+Run multiple Telegram bots simultaneously, each with its own personality, workspace, and MCP servers.
+
+**Why it matters:**
+- **Specialization**: Create bots for different domains (health, finance, cooking, etc.)
+- **Isolation**: Each bot has separate memory, files, and personality
+- **No Code**: Configure everything via JSON - no coding required
+- **MCP Selection**: Each bot uses only the MCPs it needs
+
+**Configuration (`~/.nanobot/bots.json`):**
+```json
+{
+  "bots": [
+    {
+      "id": "health-bot",
+      "name": "Dr. Bot Saúde",
+      "description": "Assistente especializado em saúde",
+      "channels": {
+        "telegram_enabled": true,
+        "telegram_token": "BOT_TOKEN_1",
+        "telegram_allow_from": ["123456789"]
+      },
+      "workspace": "~/.nanobot/workspaces/health-bot",
+      "agent": {
+        "model": "zai/glm-4.7",
+        "temperature": 0.7
+      },
+      "mcps": ["supermemory", "exa-search"]
+    },
+    {
+      "id": "finance-bot",
+      "name": "Finance Bot",
+      "description": "Assistente especializado em finanças",
+      "workspace": "~/.nanobot/workspaces/finance-bot",
+      "mcps": ["exa-search"]
+    }
+  ]
+}
+```
+
+**Key Features:**
+- ✅ Separate `SOUL.md` per bot (unique personality)
+- ✅ Isolated workspaces (memory, files, skills)
+- ✅ Per-bot MCP selection
+- ✅ Different models, temperatures, settings per bot
+- ✅ CLI commands: `nanobot multibot start`, `nanobot multibot status`
+
+**Documentation:**
+- [MULTI_BOT_DESIGN.md](./MULTI_BOT_DESIGN.md) - Architecture details
+- [MULTI_BOT_COMPLETE.md](./MULTI_BOT_COMPLETE.md) - Complete usage guide
+- [bots.json.example](./bots.json.example) - Configuration example
+
+### 4. MCP JSON Configuration System
+Configure MCP servers via JSON (like RooCode/OpenCode), without writing code.
+
+**Configuration (`~/.nanobot/bots.json` - MCPs section):**
+```json
+{
+  "mcps": {
+    "mcps": [
+      {
+        "name": "supermemory",
+        "type": "http",
+        "url": "http://localhost:3000"
+      },
+      {
+        "name": "exa-search",
+        "type": "command",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-exa"],
+        "env": {
+          "EXA_API_KEY": "your-key"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Supported Types:**
+- `command` - MCPs running as subprocesses (npx, python, etc.)
+- `http` - MCPs with REST API (Supermemory cloud, etc.)
+
+**Documentation:**
+- [MCP_CONFIG.md](./MCP_CONFIG.md) - MCP configuration guide
+
+### 5. MCP Status Checker
+Check which MCP servers are configured and active.
+
+**Usage:**
+```
+User: "Quais MCPs estão ativos?"
+User: "Status dos servidores MCP"
+```
+
+**Response:**
+```
+# 📊 MCP Servers Status
+
+## Configurados: 2
+
+### 1. Supermemory ✅
+- **Tipo**: HTTP
+- **URL**: http://localhost:3000
+- **Status**: Respondendo
+
+### 2. Exa Search ❌
+- **Tipo**: Command
+- **Status**: Processo não encontrado
+```
+
+**Implementation:**
+- Skill: `workspace/skills/mcp-status/SKILL.md`
+- Tool: `nanobot/agent/tools/mcp_status.py`
+
+### 6. Gemini Provider Support
 Added Google Gemini as a first-class provider.
 
 **Configuration:**
@@ -157,6 +337,68 @@ Integrated features from `feature/docker-supermemory` branch.
 - Optional MCP (Model Context Protocol) client integration
 - External memory service support
 - Made memory an optional dependency (not required for core functionality)
+
+### 7. Multi-Bot System with Isolated Workspaces 🤖
+Run multiple Telegram bots simultaneously, each with its own personality, workspace, and MCP servers.
+
+**Why it matters:**
+- **Specialization**: Create bots for different domains (health, finance, cooking, etc.)
+- **Isolation**: Each bot has separate memory, files, and personality
+- **No Code**: Configure everything via JSON - no coding required
+- **MCP Selection**: Each bot uses only the MCPs it needs
+
+**Configuration (`~/.nanobot/bots.json`):**
+```json
+{
+  "bots": [
+    {
+      "id": "health-bot",
+      "name": "Dr. Bot Saúde",
+      "channels": {
+        "telegram_enabled": true,
+        "telegram_token": "BOT_TOKEN_1"
+      },
+      "workspace": "~/.nanobot/workspaces/health-bot",
+      "mcps": ["supermemory"]
+    },
+    {
+      "id": "finance-bot",
+      "name": "Finance Bot",
+      "workspace": "~/.nanobot/workspaces/finance-bot",
+      "mcps": ["exa-search"]
+    }
+  ]
+}
+```
+
+**Key Features:**
+- ✅ Separate `SOUL.md` per bot (unique personality)
+- ✅ Isolated workspaces (memory, files, skills)
+- ✅ Per-bot MCP selection
+- ✅ CLI: `nanobot multibot start`, `nanobot multibot status`
+
+**Implementation:**
+- `nanobot/multibot/` - Multi-bot runtime system
+- `nanobot/config/multibot.py` - Configuration schema
+- `nanobot/cli/multibot.py` - CLI commands
+
+### 8. MCP JSON Configuration System
+Configure MCP servers via JSON (like RooCode/OpenCode), without writing code.
+
+**Features:**
+- `command` type - MCPs running as subprocesses
+- `http` type - MCPs with REST API
+- Per-bot MCP selection
+- Environment variable support
+
+### 9. MCP Status Checker
+Check which MCP servers are configured and active.
+
+**Usage:** Ask your nanobot "Quais MCPs estão ativos?"
+
+**Implementation:**
+- Skill: `workspace/skills/mcp-status/SKILL.md`
+- Tool: `nanobot/agent/tools/mcp_status.py`
 
 ---
 
@@ -297,17 +539,38 @@ self._app.add_error_handler(self._error_handler)
 - `pyproject.toml` - Added jsonschema dependency
 
 ### New Files:
-- `docker-compose.yml`
+- `docker-compose.yml` - Production-ready orchestration (includes Mem0)
+- `docker-compose.mem0.yml` - Full stack with PostgreSQL
 - `test-build.sh`
 - `DOKPLOY.md`
 - `README-DOKPLOY.md`
 - `FORK_CHANGES.md` (this file)
+- `README_MEM0.md` - Mem0 user documentation (320 lines)
+- `TESTING_MEM0.md` - Testing guide (313 lines)
+- `DEPLOYMENT_MEM0_STRATEGY.md` - Deployment strategy (212 lines)
+- `MIGRATION_GUIDE.md` - Migration guide
+- `pytest.ini` - CI/CD configuration
 - `tests/__init__.py`
 - `tests/test_tool_validation.py`
-- `nanobot/memory/__init__.py`
+- `tests/test_mem0_integration.py` - Mem0 unit tests (266 lines, 6/6 passing)
+- `tests/test_mem0_live.py` - Mem0 integration tests (328 lines)
+- `nanobot/memory/__init__.py` - Updated exports
+- `nanobot/memory/mem0_client.py` - Mem0 HTTP client (277 lines)
 - `nanobot/memory/config.py`
 - `nanobot/memory/mcp_client.py`
 - `nanobot/memory/README.md`
+- `nanobot/multibot/__init__.py`
+- `nanobot/multibot/bot_instance.py`
+- `nanobot/multibot/manager.py`
+- `nanobot/multibot/telegram_channel.py`
+- `nanobot/config/multibot.py`
+- `nanobot/cli/multibot.py`
+- `nanobot/agent/tools/mcp_status.py`
+- `workspace/skills/mcp-status/SKILL.md`
+- `MULTI_BOT_DESIGN.md`
+- `MULTI_BOT_COMPLETE.md`
+- `MCP_CONFIG.md`
+- `bots.json.example`
 
 ---
 
@@ -366,17 +629,21 @@ If you encounter conflicts during rebase, please open an issue.
 
 ## 📊 Comparison with Upstream
 
-| Feature | Upstream | This Fork |
-|---------|----------|-----------|
-| Z.AI Provider | ❌ | ✅ |
-| Dokploy Deployment | ❌ | ✅ |
-| Docker Compose | Basic | Production-ready |
-| Gemini Provider | ❌ | ✅ |
-| Tool Validation | ❌ | ✅ |
-| Env Var Pattern | Mixed | Standardized |
-| Web Fetch Security | ⚠️ Limited | ✅ Enhanced |
-| CLI Display | ⚠️ Partial | ✅ Complete |
-| Bug Fixes | - | ✅ 6 fixes |
+ | Feature | Upstream | This Fork |
+ |---------|----------|-----------|
+ | Mem0 Integration | ❌ | ✅ (Default) |
+ | Z.AI Provider | ❌ | ✅ |
+ | Dokploy Deployment | ❌ | ✅ |
+ | Docker Compose | Basic | Production-ready |
+ | Gemini Provider | ❌ | ✅ |
+ | Tool Validation | ❌ | ✅ |
+ | Env Var Pattern | Mixed | Standardized |
+ | Web Fetch Security | ⚠️ Limited | ✅ Enhanced |
+ | CLI Display | ⚠️ Partial | ✅ Complete |
+ | Multi-Bot System | ❌ | ✅ |
+ | MCP JSON Config | ❌ | ✅ |
+ | MCP Status Checker | ❌ | ✅ |
+ | Bug Fixes | - | ✅ 6 fixes |
 
 ---
 

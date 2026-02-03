@@ -1,0 +1,91 @@
+# Docker Compose configuration for Mem0 + Nanobot
+
+version: '3.8'
+
+services:
+  # Mem0 Server (PostgreSQL + Qdrant + API)
+  mem0:
+    image: mem0ai/mem0:latest
+    container_name: mem0
+    ports:
+      - "8000:8000"
+    environment:
+      # Use the same PostgreSQL for both
+      - POSTGRES_URI=postgresql://mem0user:mem0pass@postgres:5432/mem0db
+      # Or use Qdrant
+      # - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - postgres
+      # - qdrant
+    restart: unless-stopped
+    networks:
+      - nanobot-network
+
+  # PostgreSQL database for Mem0
+  postgres:
+    image: postgres:15
+    container_name: mem0-postgres
+    environment:
+      - POSTGRES_USER=mem0user
+      - POSTGRES_PASSWORD=mem0pass
+      - POSTGRES_DB=mem0db
+    volumes:
+      - mem0-postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - nanobot-network
+
+  # Qdrant vector database (alternative to PostgreSQL)
+  # qdrant:
+  #   image: qdrant/qdrant:latest
+  #   container_name: mem0-qdrant
+  #   ports:
+  #     - "6333:6333"
+  #   volumes:
+  #     - qdrant-data:/qdrant/storage
+  #   restart: unless-stopped
+  #   networks:
+  #     - nanobot-network
+
+  # Nanobot with Mem0 integration
+  nanobot:
+    build: .
+    container_name: nanobot
+    ports:
+      - "18790:18790"
+    environment:
+      # LLM Provider
+      - NANOBOT_PROVIDERS__ZAI__API_KEY=${ZAI_API_KEY}
+      
+      # Mem0 Configuration (replaces Supermemory)
+      - MEM0_URL=http://mem0:8000
+      - MEM0_ENABLED=true
+      - MEM0_COLLECTION=nanobot
+      
+      # Telegram Configuration
+      - NANOBOT_CHANNELS__TELEGRAM__ENABLED=true
+      - NANOBOT_CHANNELS__TELEGRAM__TOKEN=${TELEGRAM_BOT_TOKEN}
+      - NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM=["${TELEGRAM_USER_ID}"]
+      
+      # Multi-Bot Configuration
+      - NANOBOT_MULTI_BOT=true
+    volumes:
+      # Mount bots.json configuration
+      - ./bots.json:/app/config/bots.json:ro
+      # Workspace directory
+      - ./workspace:/root/.nanobot/workspace
+      # Nanobot code
+      - ./nanobot:/app/nanobot:ro
+    depends_on:
+      - mem0
+    restart: unless-stopped
+    networks:
+      - nanobot-network
+
+networks:
+  nanobot-network:
+    driver: bridge
+
+volumes:
+  mem0-postgres-data:
+  qdrant-data:

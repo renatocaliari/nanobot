@@ -20,6 +20,7 @@
 
 ## 📢 News
 
+- **2025-02-03** 🧠 **Mem0 integration** - Self-hosted multi-tenant memory system (default)
 - **2025-02-02** 🐳 Docker deployment support added! Deploy to Dokploy in minutes. See [DOKPLOY.md](./DOKPLOY.md)
 - **2025-02-02** ⭐ Z.AI provider support for cost-efficient GLM models ($0.11/M tokens)
 - **2025-02-01** 🎉 nanobot launched! Welcome to try 🐈 nanobot!
@@ -41,6 +42,23 @@
 </p>
 
 ## ✨ Features
+
+**🧠 Persistent Memory with Mem0**
+
+This fork includes **Mem0** - a self-hosted, multi-tenant memory system that enables nanobot to remember important information across conversations.
+
+**Key Features:**
+- ✅ **Self-hosted** - No external dependencies or API limits
+- ✅ **Multi-user isolation** - Each user has separate memory space
+- ✅ **Semantic search** - Find memories by meaning, not just keywords
+- ✅ **Automatic management** - Store, retrieve, and organize memories seamlessly
+
+**Usage:**
+Mem0 is automatically enabled when using Docker Compose. Memories are stored per user and persist across sessions.
+
+See [README_MEM0.md](./README_MEM0.md) for complete API documentation and usage examples.
+
+---
 
 <table align="center">
   <tr align="center">
@@ -167,6 +185,8 @@ That's it! You have a working AI assistant in 2 minutes.
 
 ### Docker Compose (Recommended)
 
+The Docker Compose configuration includes **Mem0 memory service** by default for persistent, multi-tenant memory storage.
+
 ```bash
 # Clone this fork
 git clone https://github.com/renatocaliari/nanobot.git
@@ -178,11 +198,27 @@ cp .env.example .env
 # Edit .env and add your API keys
 nano .env
 
-# Start services
+# Start services (includes Mem0)
 docker-compose up -d
 
 # Check logs
 docker-compose logs -f nanobot
+
+# Verify Mem0 is running
+curl http://localhost:8000/v1/health
+```
+
+**Services included:**
+- `nanobot` - Main AI assistant service
+- `mem0` - Self-hosted memory system (port 8000)
+
+**Environment variables for Mem0:**
+```bash
+# Optional: Mem0 API key (if your Mem0 instance requires it)
+MEM0_API_KEY=your-api-key
+
+# Optional: Custom Mem0 URL (default: http://mem0:8000)
+MEM0_URL=http://mem0:8000
 ```
 
 ### Docker
@@ -411,6 +447,28 @@ nanobot cron remove <job_id>
 
 </details>
 
+<details>
+<summary><b>Memory Management</b></summary>
+
+```bash
+# List all memories
+nanobot memory list --user user123
+
+# Search memories
+nanobot memory search --user user123 "Python programming"
+
+# Export to backup
+nanobot memory export --user user123 --output memories.json
+
+# Import from backup
+nanobot memory import --input memories.json --user user123
+
+# Check Mem0 server health
+nanobot memory health
+```
+
+</details>
+
 ## 📁 Project Structure
 
 ```
@@ -433,12 +491,36 @@ nanobot/
 └── cli/            # 🖥️ Commands
 ```
 
+## 🧪 Testing
+
+### Mem0 Integration Tests
+
+The nanobot fork includes comprehensive Mem0 integration testing:
+
+```bash
+# Unit tests (no server required)
+pytest tests/test_mem0_integration.py -v
+
+# Live integration tests (requires Mem0 server running)
+docker run -d -p 8000:8000 mem0ai/mem0:latest
+python tests/test_mem0_live.py
+
+# Run only unit tests (CI/CD friendly)
+pytest -m "not integration"
+
+# Run all tests including integration
+pytest -m ""
+```
+
+See [TESTING_MEM0.md](./TESTING_MEM0.md) for complete testing guide.
+
 ## 🤝 Contribute & Roadmap
 
 ### Fork Differences
 
 This is a fork of [HKUDS/nanobot](https://github.com/HKUDS/nanobot) with additional features:
 
+- 🧠 **Mem0 Integration** (Default) - Self-hosted multi-tenant memory system
 - ⭐ **Z.AI Provider** - Cost-efficient GLM models ($0.11/M tokens)
 - 🐳 **Dokploy Deployment** - Production-ready Docker configuration
 - 🔒 **Security Fixes** - URL validation, redirect limits

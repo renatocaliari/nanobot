@@ -59,6 +59,17 @@ nano .env
   - ✅ Correto: `["123456789"]` ou `["123456789", "987654321"]`
 - `NANOBOT_CHANNELS__WHATSAPP__ENABLED`: true/false para WhatsApp
 - `NANOBOT_PORT`: Porta do gateway (padrão: 18790)
+- `MEM0_URL`: URL do servidor Mem0 (padrão: `http://mem0:8000` para Docker)
+- `MEM0_API_KEY`: Chave API do Mem0 (opcional, deixe vazio se não usar autenticação)
+
+> **🧠 Mem0 Memory System:**
+> O nanobot inclui o sistema de memória **Mem0** por padrão na configuração Docker Compose. Mem0 fornece:
+> - ✅ Memória persistente multi-usuário
+> - ✅ Busca semântica por significado
+> - ✅ Auto-hospedado (sem dependências externas)
+> - ✅ Código aberto (licença MIT)
+>
+> Não é necessário configurar nada adicional - o Mem0 já está incluído no `docker-compose.yml`!
 
 > **💡 Dica**: Para múltiplos usuários no Telegram, separe por vírgula dentro do array JSON: `["123456789", "987654321", "@usuario"]`
 

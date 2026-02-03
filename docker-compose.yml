@@ -1,6 +1,34 @@
 version: '3.8'
 
 services:
+  mem0:
+    image: mem0ai/mem0:latest
+    container_name: nanobot-mem0
+    ports:
+      - "8000:8000"
+    environment:
+      - MEM0_API_KEY=${MEM0_API_KEY:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   nanobot:
     build:
       context: .
@@ -26,28 +54,24 @@ services:
       - NANOBOT_PROVIDERS__OPENAI__API_KEY=${NANOBOT_PROVIDERS__OPENAI__API_KEY:-}
       - NANOBOT_PROVIDERS__GEMINI__API_KEY=${NANOBOT_PROVIDERS__GEMINI__API_KEY:-}
 
-      # Web Search
       - NANOBOT_TOOLS__WEB__SEARCH__API_KEY=${NANOBOT_TOOLS__WEB__SEARCH__API_KEY:-}
 
-      # Telegram configuration
+      - MEM0_URL=${MEM0_URL:-http://mem0:8000}
+      - MEM0_API_KEY=${MEM0_API_KEY:-}
+
       - NANOBOT_CHANNELS__TELEGRAM__ENABLED=${NANOBOT_CHANNELS__TELEGRAM__ENABLED:-false}
       - NANOBOT_CHANNELS__TELEGRAM__TOKEN=${NANOBOT_CHANNELS__TELEGRAM__TOKEN:-}
       - NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM=${NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM:-}
 
-      # WhatsApp configuration (optional - only set if using WhatsApp)
-      # If enabled, use: - NANOBOT_CHANNELS__WHATSAPP__ENABLED=true
-      # - NANOBOT_CHANNELS__WHATSAPP__ALLOW_FROM=["+1234567890"]
-
-      # Gateway port
       - NANOBOT_PORT=${NANOBOT_PORT:-18790}
-
-      # Default model
       - NANOBOT_AGENTS__DEFAULTS__MODEL=${NANOBOT_AGENTS__DEFAULTS__MODEL:-zai/glm-4.7}
 
-    # Default command - can be overridden in Dokploy
     command: ["gateway"]
 
-    # Restart policy
+    depends_on:
+      mem0:
+        condition: service_healthy
+
     restart: unless-stopped
 
     # Resource limits (adjust based on your needs)
