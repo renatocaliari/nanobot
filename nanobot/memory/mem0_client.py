@@ -290,7 +290,8 @@ class Mem0Client:
             True if server is healthy, False otherwise
         """
         try:
-            response = await self.client.get("/v1/health")
+            # Mem0 doesn't have /v1/health, use /docs endpoint
+            response = await self.client.get("/docs")
             return response.status_code == 200
         except Exception:
             return False
